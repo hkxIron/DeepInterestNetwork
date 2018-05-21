@@ -1,6 +1,6 @@
 import pickle
 import pandas as pd
-
+# 数据说明见: http://jmcauley.ucsd.edu/data/amazon/
 def to_df(file_path):
   with open(file_path, 'r') as fin:
     df = {}
