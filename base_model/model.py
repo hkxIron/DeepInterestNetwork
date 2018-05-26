@@ -9,12 +9,12 @@ class Model(object):
   def __init__(self, user_count, item_count, cate_count, cate_list):
 
     self.u = tf.placeholder(tf.int32, [None,]) # [B]
-    self.i = tf.placeholder(tf.int32, [None,]) # [B]
+    self.i = tf.placeholder(tf.int32, [None,]) # [B], item feature list, dim: N*M
     self.j = tf.placeholder(tf.int32, [None,]) # [B]
     self.y = tf.placeholder(tf.float32, [None,]) # [B]
     self.hist_i = tf.placeholder(tf.int32, [None, None]) # [B, T]
     self.sl = tf.placeholder(tf.int32, [None,]) # [B]
-    self.lr = tf.placeholder(tf.float64, [])
+    self.lr = tf.placeholder(tf.float64, []) # learning rate
 
     hidden_units = 128
 
@@ -55,7 +55,7 @@ class Model(object):
     hist = h_emb
     hist = tf.reduce_sum(hist, 1) 
     hist = tf.div(hist, tf.cast(tf.tile(tf.expand_dims(self.sl,1), [1,128]), tf.float32))
-    print h_emb.get_shape().as_list()
+    print(h_emb.get_shape().as_list())
     #-- sum end ---------
     
     hist = tf.layers.batch_normalization(inputs = hist)
@@ -103,7 +103,7 @@ class Model(object):
     self.score_i = tf.reshape(self.score_i, [-1, 1])
     self.score_j = tf.reshape(self.score_j, [-1, 1])
     self.p_and_n = tf.concat([self.score_i, self.score_j], axis=-1)
-    print self.p_and_n.get_shape().as_list()
+    print(self.p_and_n.get_shape().as_list())
 
 
     # Step variable
