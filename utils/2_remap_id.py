@@ -14,12 +14,12 @@ with open('../raw_data/meta.pkl', 'rb') as f:
 
 
 def build_map(df, col_name):
-  key = sorted(df[col_name].unique().tolist())
-  m = dict(zip(key, range(len(key))))
-  df[col_name] = df[col_name].map(lambda x: m[x])
+  key = sorted(df[col_name].unique().tolist()) # key去重后排序
+  m = dict(zip(key, range(len(key)))) # 形成查询字典
+  df[col_name] = df[col_name].map(lambda x: m[x]) # 将key替换成id
   return m, key
 
-asin_map, asin_key = build_map(meta_df, 'asin')
+asin_map, asin_key = build_map(meta_df, 'asin') # 将所有的item id都替换成连续的id, 即所谓的连续编号
 cate_map, cate_key = build_map(meta_df, 'categories')
 revi_map, revi_key = build_map(reviews_df, 'reviewerID')
 
@@ -39,7 +39,7 @@ cate_list = [meta_df['categories'][i] for i in range(len(asin_map))]
 cate_list = np.array(cate_list, dtype=np.int32)
 
 
-with open('../raw_data/remap.pkl', 'wb') as f:
+with open('../raw_data/remap.pkl', 'wb') as f: # 向pkl中dump多个数组
   pickle.dump(reviews_df, f, pickle.HIGHEST_PROTOCOL) # uid, iid
   pickle.dump(cate_list, f, pickle.HIGHEST_PROTOCOL) # cid of iid line
   pickle.dump((user_count, item_count, cate_count, example_count),
