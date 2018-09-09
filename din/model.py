@@ -6,26 +6,26 @@ class Model(object):
 
   def __init__(self, user_count, item_count, cate_count, cate_list):
 
-    self.u = tf.placeholder(tf.int32, [None,]) # [B]
-    self.i = tf.placeholder(tf.int32, [None,]) # [B]
-    self.j = tf.placeholder(tf.int32, [None,]) # [B]
-    self.y = tf.placeholder(tf.float32, [None,]) # [B]
-    self.hist_i = tf.placeholder(tf.int32, [None, None]) # [B, T]
-    self.sl = tf.placeholder(tf.int32, [None,]) # [B]
+    self.u = tf.placeholder(tf.int32, [None,]) # [B], user_behaviour
+    self.i = tf.placeholder(tf.int32, [None,]) # [B], candidate ad items
+    self.j = tf.placeholder(tf.int32, [None,]) # [B],
+    self.y = tf.placeholder(tf.float32, [None,]) # [B], label
+    self.history_item_sequence = tf.placeholder(tf.int32, [None, None]) # [B, T], 历史商品的序列
+    self.sequence_length = tf.placeholder(tf.int32, [None, ]) # [B], 当前batch中的最长序列的长度
     self.lr = tf.placeholder(tf.float64, [])
 
     hidden_units = 128
 
-    user_emb_w = tf.get_variable("user_emb_w", [user_count, hidden_units])
-    item_emb_w = tf.get_variable("item_emb_w", [item_count, hidden_units // 2])
+    user_emb_w = tf.get_variable("user_emb_w", [user_count, hidden_units])  # [user_count, hidden]
+    item_emb_w = tf.get_variable("item_emb_w", [item_count, hidden_units // 2]) # [item_count, hidden/2]
     item_b = tf.get_variable("item_b", [item_count],
                              initializer=tf.constant_initializer(0.0))
-    cate_emb_w = tf.get_variable("cate_emb_w", [cate_count, hidden_units // 2])
+    cate_emb_w = tf.get_variable("cate_emb_w", [cate_count, hidden_units // 2]) # [cate_count, hidden/2]
     cate_list = tf.convert_to_tensor(cate_list, dtype=tf.int64)
 
-    u_emb = tf.nn.embedding_lookup(user_emb_w, self.u)
+    u_emb = tf.nn.embedding_lookup(user_emb_w, self.u) # [batch , hidden_units]
 
-    ic = tf.gather(cate_list, self.i)
+    ic = tf.gather(cate_list, self.i) # gather与embedding_lookup类似,
     i_emb = tf.concat(values = [
         tf.nn.embedding_lookup(item_emb_w, self.i),
         tf.nn.embedding_lookup(cate_emb_w, ic),
@@ -39,13 +39,13 @@ class Model(object):
         ], axis=1)
     j_b = tf.gather(item_b, self.j)
 
-    hc = tf.gather(cate_list, self.hist_i)
+    hc = tf.gather(cate_list, self.history_item_sequence)
     h_emb = tf.concat([
-        tf.nn.embedding_lookup(item_emb_w, self.hist_i),
+        tf.nn.embedding_lookup(item_emb_w, self.history_item_sequence),
         tf.nn.embedding_lookup(cate_emb_w, hc),
         ], axis=2)
 
-    hist =attention(i_emb, h_emb, self.sl)
+    hist =attention(i_emb, h_emb, self.sequence_length)
     #-- attention end ---
     
     hist = tf.layers.batch_normalization(inputs = hist)
@@ -133,8 +133,8 @@ class Model(object):
         self.u: uij[0],
         self.i: uij[1],
         self.y: uij[2],
-        self.hist_i: uij[3],
-        self.sl: uij[4],
+        self.history_item_sequence: uij[3],
+        self.sequence_length: uij[4],
         self.lr: l,
         })
     return loss
@@ -144,16 +144,16 @@ class Model(object):
         self.u: uij[0],
         self.i: uij[1],
         self.j: uij[2],
-        self.hist_i: uij[3],
-        self.sl: uij[4],
+        self.history_item_sequence: uij[3],
+        self.sequence_length: uij[4],
         })
     return u_auc, socre_p_and_n
 
   def test(self, sess, uid, hist_i, sl):
     return sess.run(self.logits_all, feed_dict={
         self.u: uid,
-        self.hist_i: hist_i,
-        self.sl: sl,
+        self.history_item_sequence: hist_i,
+        self.sequence_length: sl,
         })
 
   def save(self, sess, path):

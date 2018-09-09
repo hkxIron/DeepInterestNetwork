@@ -47,7 +47,7 @@ class DataInputTest:
     self.data = data
     self.epoch_size = len(self.data) // self.batch_size
     if self.epoch_size * self.batch_size < len(self.data):
-      self.epoch_size += 1
+      self.epoch_size += 1 # 没有除尽，应该多一个epoch
     self.i = 0
 
   def __iter__(self):
@@ -65,7 +65,7 @@ class DataInputTest:
     u, i, j, sl = [], [], [], []
     for t in ts:
       u.append(t[0])
-      i.append(t[2][0])
+      i.append(t[2][0]) # 就这里与DataInput有差别
       j.append(t[2][1])
       sl.append(len(t[1]))
     max_sl = max(sl)
